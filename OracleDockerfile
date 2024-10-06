@@ -1,0 +1,9 @@
+FROM oracle/database:21.3.0-xe
+
+ENV ORACLE_PWD=123456
+ENV ORACLE_CHARACTERSET=AL32UTF8
+
+COPY init.sql /opt/oracle/scripts/startup
+COPY healthcheck.sql /home/oracle
+
+EXPOSE 1521

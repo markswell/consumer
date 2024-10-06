@@ -1,0 +1,79 @@
+version: "3.9"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.1.1
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    restart: always
+    networks:
+      - consumer-network
+
+  kafka:
+    image: confluentinc/cp-kafka:6.1.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+    expose:
+      - '29092'
+      - '9092'
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_MIN_INSYNC_REPLICAS: '1'
+    restart: always
+    networks:
+      - consumer-network
+
+  oracle:
+    build:
+      context: .
+      dockerfile: ./OracleDockerfile
+    image: consumer/oracle:1.0
+    restart: always
+    container_name: oracle
+    ports:
+      - "1521:1521"
+    healthcheck:
+      test: [ "CMD-SHELL", "sqlplus", "/", "as", "sysdba", "@healthcheck.sql" ]
+      interval: 60s
+      retries: 10
+      start_period: 60s
+      timeout: 10s
+    networks:
+      - consumer-network
+
+  consumer:
+    build:
+      context: .
+    links:
+      - oracle
+      - kafka
+    depends_on:
+      oracle:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    image: consumer/consumer:1.0
+    environment:
+      - DATABASE_URL=jdbc:oracle:thin:@//oracle:1521/xe
+      - DATABASE_USER=consumer
+      - DATABASE_PASSWORD=123456
+      - KAFKA_URL=kafka:29092
+    restart: always
+    container_name: consumer
+    ports:
+      - "8090:8090"
+    networks:
+      - consumer-network
+
+networks:
+  consumer-network:
+    driver: bridge

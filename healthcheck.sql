@@ -1,0 +1,1 @@
+select 'Oracle running ok!' from dual;
