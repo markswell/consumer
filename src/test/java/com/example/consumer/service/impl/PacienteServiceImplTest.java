@@ -1,12 +1,11 @@
 package com.example.consumer.service.impl;
 
-import com.example.consumer.service.PacienteService;
-import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import com.example.consumer.model.Paciente;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import com.example.consumer.service.PacienteService;
 import com.example.consumer.repository.PacienteRepository;
 
 import java.util.List;
@@ -16,7 +15,6 @@ import java.util.ArrayList;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.data.domain.PageRequest.*;
 
@@ -41,7 +39,7 @@ class PacienteServiceImplTest {
                 .thenReturn(new PageImpl(pacientes, of(1, 20) , pacientes.size()));
         when(repository.findById(1L))
                 .thenReturn(Optional.of(pacientes.get(1)));
-        when(repository.findByNome("paciente-1"))
+        when(repository.findByNomeContaining("paciente-1"))
                 .thenReturn(pacientes.stream().filter(p -> p.getNome().equals("paciente-1")).toList());
     }
 

@@ -11,5 +11,5 @@ import java.util.List;
 public interface PacienteRepository extends JpaRepository<Paciente, Long> {
 
     @Query
-    List<Paciente> findByNome(String nome);
+    List<Paciente> findByNomeContaining(String nome);
 }

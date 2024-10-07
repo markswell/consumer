@@ -18,7 +18,6 @@ public class PacienteConsumer {
     @KafkaListener(topics = "paciente", groupId = "consumer_group")
     @RetryableTopic(attempts = "1", kafkaTemplate = "kafkaTemplate")
     public void consume(String json) {
-        System.out.println("MARKSWELL" + json);
         var paciente = pacienteDeserializerService.deserilize(json);
         pacienteService.save(paciente);
     }
