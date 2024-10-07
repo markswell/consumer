@@ -1,66 +1,61 @@
 package com.example.consumer.service.impl;
 
-import org.mockito.Mock;
-import org.mockito.InjectMocks;
+import com.example.consumer.service.PacienteService;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import com.example.consumer.model.Paciente;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import com.example.consumer.repository.PacienteRepository;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.oracle.OracleContainer;
 
+import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.data.domain.Pageable.*;
+import static org.springframework.data.domain.PageRequest.*;
 
-@SpringBootTest
-@Testcontainers
 class PacienteServiceImplTest {
 
-//    @Mock
-//    private PacienteRepository repository;
+    private PacienteService service;
+    private List<Paciente> pacientes;
+    private PacienteRepository repository;
 
-    @Autowired
-    private PacienteServiceImpl service;
+    public PacienteServiceImplTest() {
+        this.pacientes = findAll();
+        this.repository = mock(PacienteRepository.class);
+        this.service = new PacienteServiceImpl(repository);
 
-//    @Autowired
-//    private KafkaContainer kafkaContainer;
-
-    @Autowired
-    private OracleContainer oracleContainer;
-
-    @BeforeEach
-    public void init() {
-//        when(repository.save(createPaciente(1L)))
-//                .thenReturn(createPaciente(1L));
-//
-//        when(repository.findAll(ofSize(20)))
-//                .thenReturn(createPacienteList());
-//
-//        when(repository.findById(1L))
-//                .thenReturn(Optional.of(createPaciente(1L)));
+        when(repository.save(any()))
+                .thenAnswer(r -> {
+                    var paciente = new Paciente();
+                    pacientes.add(paciente);
+                    return paciente;
+                });
+        when(repository.findAll(Pageable.ofSize(20)))
+                .thenReturn(new PageImpl(pacientes, of(1, 20) , pacientes.size()));
+        when(repository.findById(1L))
+                .thenReturn(Optional.of(pacientes.get(1)));
+        when(repository.findByNome("paciente-1"))
+                .thenReturn(pacientes.stream().filter(p -> p.getNome().equals("paciente-1")).toList());
     }
 
     @Test
     @DisplayName("Should run ok")
     public void shouldSave() {
         service.save(new Paciente());
+        assertEquals(61, pacientes.size());
     }
 
     @Test
     @DisplayName("Should find all")
     public void shouldFindAll() {
-        var pacientes = service.findAll(ofSize(20));
+        var pacientes = service.findAll(Pageable.ofSize(20));
         assertEquals(20, pacientes.getSize());
     }
 
@@ -71,16 +66,23 @@ class PacienteServiceImplTest {
         assertEquals(1L, paciente.getCodigo());
     }
 
+    @Test
+    @DisplayName("Should find by name")
+    public void shouldFindByName() {
+        List<Paciente> paciente = service.findByName("paciente-1");
+        assertEquals(1, paciente.size());
+    }
+
     private Paciente createPaciente(long id) {
         return new Paciente(id,"meu paciente", "111111111", LocalDate.now());
     }
 
-    private Page<Paciente> createPacienteList() {
-        var pacientes = new ArrayList<Paciente>();
-        for(int i = 0; i < 20; i++) {
-            pacientes.add(createPaciente(i));
+    private List<Paciente> findAll() {
+        var list = new ArrayList<Paciente>();
+        for(long i = 0; i < 60; i++) {
+            list.add(new Paciente(i, "paciente-%s".formatted(i), "52671622058", LocalDate.now()));
         }
-        return  new PageImpl<Paciente>(pacientes);
+        return list;
     }
 
 }

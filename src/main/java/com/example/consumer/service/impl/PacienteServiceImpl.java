@@ -9,6 +9,8 @@ import com.example.consumer.service.PacienteService;
 import com.example.consumer.repository.PacienteRepository;
 import com.example.consumer.service.exception.PacienteNotFoundException;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PacienteServiceImpl implements PacienteService {
@@ -29,5 +31,10 @@ public class PacienteServiceImpl implements PacienteService {
     public Paciente findById(Long id) {
         var paciente = repository.findById(id);
         return paciente.orElseThrow(PacienteNotFoundException::new);
+    }
+
+    @Override
+    public List<Paciente> findByName(String nome) {
+        return repository.findByNome(nome);
     }
 }

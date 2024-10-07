@@ -10,11 +10,11 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 class TestcontainersConfiguration {
 
-//	@Bean
-//	@ServiceConnection
-//	KafkaContainer kafkaContainer() {
-//		return new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:latest"));
-//	}
+	@Bean
+	@ServiceConnection
+	KafkaContainer kafkaContainer() {
+		return new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:latest"));
+	}
 
 	@Bean
 	@ServiceConnection
