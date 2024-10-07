@@ -43,9 +43,9 @@ services:
       - "1521:1521"
     healthcheck:
       test: [ "CMD-SHELL", "sqlplus", "/", "as", "sysdba", "@healthcheck.sql" ]
-      interval: 60s
+      interval: 600s
       retries: 10
-      start_period: 60s
+      start_period: 600s
       timeout: 10s
     networks:
       - consumer-network
