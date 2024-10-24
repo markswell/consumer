@@ -1,42 +1,51 @@
 package com.example.consumer.service.impl;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
 import com.example.consumer.model.Paciente;
+import com.example.consumer.repository.PacienteRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import com.example.consumer.service.PacienteService;
-import com.example.consumer.repository.PacienteRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-import java.util.Optional;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.data.domain.PageRequest.*;
+import static org.springframework.data.domain.PageRequest.of;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class PacienteServiceImplTest {
 
-    private PacienteService service;
+    @InjectMocks
+    private PacienteServiceImpl service;
     private List<Paciente> pacientes;
+    @Mock(extraInterfaces = {JpaRepository.class})
     private PacienteRepository repository;
 
-    public PacienteServiceImplTest() {
+    @BeforeEach
+    public void init() {
         this.pacientes = findAll();
-        this.repository = mock(PacienteRepository.class);
-        this.service = new PacienteServiceImpl(repository);
-
         when(repository.save(any()))
                 .thenAnswer(r -> {
                     var paciente = new Paciente();
                     pacientes.add(paciente);
                     return paciente;
                 });
-        when(repository.findAll(Pageable.ofSize(20)))
-                .thenReturn(new PageImpl(pacientes, of(1, 20) , pacientes.size()));
+        when(repository.findAll(Mockito.any(Pageable.class)))
+                .thenReturn(new PageImpl<>(pacientes, of(1, 20) , pacientes.size()));
         when(repository.findById(1L))
                 .thenReturn(Optional.of(pacientes.get(1)));
         when(repository.findByNomeContaining("paciente-1"))
@@ -53,6 +62,7 @@ class PacienteServiceImplTest {
     @Test
     @DisplayName("Should find all")
     public void shouldFindAll() {
+
         var pacientes = service.findAll(Pageable.ofSize(20));
         assertEquals(20, pacientes.getSize());
     }
@@ -67,12 +77,10 @@ class PacienteServiceImplTest {
     @Test
     @DisplayName("Should find by name")
     public void shouldFindByName() {
-        List<Paciente> paciente = service.findByName("paciente-1");
-        assertEquals(1, paciente.size());
-    }
 
-    private Paciente createPaciente(long id) {
-        return new Paciente(id,"meu paciente", "111111111", LocalDate.now());
+        List<Paciente> paciente = service.findByName("paciente-1");
+        verify(repository).findByNomeContaining("paciente-1");
+        assertEquals(1, paciente.size());
     }
 
     private List<Paciente> findAll() {
